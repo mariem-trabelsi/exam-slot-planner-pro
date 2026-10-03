@@ -46,6 +46,13 @@ souvent. Quand il n'y parvient pas, le rapport nomme le grade concerné.
 | R-11 | Surveillances consécutives favorisées |
 | R-12 | Même charge à grade égal |
 
+Quatre sont **obligatoires à la livraison** : R-03, R-04, R-05 et R-12 — ne pas
+convoquer deux fois la même personne sur un créneau, ne convoquer personne sur
+un créneau qu'il a refusé, ne pas dépasser le quota d'un grade, et donner le
+même nombre de surveillances à deux enseignants de même grade. Ce sont celles
+qu'un enseignant conteste. Les autres sont souhaitables, et chacune se change
+dans l'écran d'administration.
+
 Leur intitulé et leur description se modifient dans vos propres mots. Ce qu'elles
 vérifient ne change pas.
 

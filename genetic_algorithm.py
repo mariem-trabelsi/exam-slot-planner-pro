@@ -949,11 +949,17 @@ def verifier_planning(assignment, teachers, slots_dict, conf=None):
         if resp is not None and resp not in set(assignment.get(slot, ())):
             infractions['R-06'].append("%s : responsable %s absent" % (slot, resp))
 
-    # R-12 : meme charge a grade egal. L'egalite STRICTE est arithmetiquement
-    # impossible des que le total d'un grade n'est pas divisible par son
-    # effectif — mesure sur les donnees reelles : 44 surveillances pour
-    # 9 enseignants de grade AC, 218 pour 49 en MA. Ce qui se garantit est un
-    # ecart d'au plus une surveillance, et c'est ce que la regle exige.
+    # R-12 : meme charge a grade egal, au sens STRICT — « ils sont cinq au
+    # maximum, on ne peut pas en voir un a quatre et un autre du meme grade a
+    # cinq ». Le controle ci-dessous exige donc max == min, sans tolerance.
+    #
+    # Ce n'est pas toujours atteignable : il faut que le total de chaque grade
+    # se divise par son effectif, et les indisponibilites comme les effectifs
+    # par salle ne le permettent pas toujours. La reparation deplace alors des
+    # surveillances ENTRE grades pour s'en approcher (`_ajuster_totaux_par_
+    # grade`), puis echange A L'INTERIEUR de chaque grade. Quand elle n'y
+    # arrive pas, la regle est declaree non tenue et le grade est nomme — ce
+    # qui est le contrat, pas un echec : tenue, ou declaree non tenue.
     par_grade = {}
     for e, fiche in teachers.items():
         if fiche.get('participe_surveillance'):

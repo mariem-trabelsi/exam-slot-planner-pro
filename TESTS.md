@@ -64,11 +64,12 @@ exigent que tout manquement figure dans le rapport, et qu'un planning
 non conforme soit annonce comme tel.
 
 **Egalite de charge** — avec R-12 declaree obligatoire, deux enseignants d'un
-meme grade ne different que d'une surveillance. L'egalite STRICTE est
-arithmetiquement impossible : 44 surveillances pour 9 enseignants de grade AC,
-218 pour 49 en MA — ces nombres ne se divisent pas, pour 5 grades sur 9. Un
-ecart d'au plus un est ce qu'un planning peut tenir, et c'est ce qui est
-verifie.
+meme grade font EXACTEMENT le meme nombre de surveillances. Pas « a une pres » :
+le controle exige max == min. C'etait d'abord une tolerance d'une unite, au
+motif que l'egalite stricte serait arithmetiquement impossible — elle ne l'est
+pas, parce que le total d'un grade n'est pas fixe : la reparation deplace des
+surveillances ENTRE grades avant d'equilibrer a l'interieur de chacun. Elle n'y
+arrive pas toujours, et c'est alors declare.
 
 **Echecs non avales** — un defaut de programmation dans la boucle de recherche
 arrete la generation au lieu de rendre un planning degrade. La boucle sautait

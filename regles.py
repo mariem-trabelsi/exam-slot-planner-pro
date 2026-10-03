@@ -31,6 +31,14 @@ DURE, SOUPLE, IGNOREE = 'dure', 'souple', 'ignoree'
 
 FICHIER = 'regles.json'
 
+# Quatre regles sont OBLIGATOIRES a la livraison : ne pas convoquer deux fois
+# la meme personne sur un creneau, ne pas convoquer quelqu'un sur un creneau
+# qu'il a refuse, ne pas depasser le quota d'un grade, et donner le meme nombre
+# de surveillances a deux enseignants d'un meme grade. Ce sont celles qu'un
+# enseignant conteste, et elles etaient livrees en « souhaitable » : un
+# etablissement qui n'ouvrait pas l'ecran d'administration obtenait un planning
+# que l'outil presentait comme conforme en ayant le droit de les violer.
+# Les autres restent souhaitables : ce sont des preferences de confort.
 CATALOGUE = [
     {
         'id': 'R-01', 'nom': "Effectif minimum par salle",
@@ -57,13 +65,13 @@ CATALOGUE = [
     {
         'id': 'R-04', 'nom': "Indisponibilites declarees",
         'detail': "Ne pas convoquer quelqu'un sur un creneau qu'il a refuse.",
-        'defaut': SOUPLE, 'natures': [DURE, SOUPLE, IGNOREE], 'poids': 2000,
+        'defaut': DURE, 'natures': [DURE, SOUPLE, IGNOREE], 'poids': 2000,
         'unite': "points par convocation, ponderes par la priorite du souhait",
     },
     {
         'id': 'R-05', 'nom': "Quota par grade",
         'detail': "Le nombre de surveillances d'un enseignant reste dans son quota.",
-        'defaut': SOUPLE, 'natures': [DURE, SOUPLE, IGNOREE], 'poids': 500,
+        'defaut': DURE, 'natures': [DURE, SOUPLE, IGNOREE], 'poids': 500,
         'unite': "points par surveillance en trop, au carre",
     },
     {
@@ -101,7 +109,7 @@ CATALOGUE = [
     {
         'id': 'R-12', 'nom': "Meme charge a grade egal",
         'detail': "Deux enseignants d'un meme grade font exactement le meme nombre de surveillances.",
-        'defaut': SOUPLE, 'natures': [DURE, SOUPLE, IGNOREE], 'poids': 600,
+        'defaut': DURE, 'natures': [DURE, SOUPLE, IGNOREE], 'poids': 600,
         'unite': "points par unite d'ecart au-dela de un",
     },
     {

@@ -350,7 +350,15 @@ def t_conformite():
             break
         vrai(casse is not None, "un creneau se prete a l'echange fabrique")
 
-        c = R.defauts(); c['R-06']['nature'] = R.DURE
+        # Le test porte sur R-06 SEULE : on relache tout ce qui peut l'etre,
+        # sinon une autre regle obligatoire — l'egalite des charges, par
+        # exemple — refuserait le planning et l'on ne saurait plus laquelle
+        # a parle.
+        c = R.defauts()
+        for rid, entree in c.items():
+            if rid != 'R-06' and R.SOUPLE in R.PAR_ID[rid]['natures']:
+                entree['nature'] = R.SOUPLE
+        c['R-06']['nature'] = R.DURE
         R.enregistrer(c); G.recharger_regles()
         v = G.verifier_planning(casse, t, sd)
         r6 = [x for x in v if x['id'] == 'R-06'][0]
