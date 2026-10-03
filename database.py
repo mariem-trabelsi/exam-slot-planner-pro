@@ -153,7 +153,13 @@ class DatabaseManager:
         
         # Créer une fenêtre de dialogue pour les notes
         save_window = ctk.CTkToplevel(main_app)
-        save_window.title("💾 Sauvegarder le planning")
+        # Le glyphe 💾 (U+1F4BE) fait tomber Tk en erreur de segmentation des qu'il
+        # apparait dans le libelle d'un widget cree APRES l'ouverture de la fenetre,
+        # avec une police explicite. Mesure, dans l'application reelle : 3 plantages
+        # sur 3 avec ce caractere, 3 reussites sur 3 sans lui, et 3 reussites sur 3
+        # avec une police par defaut. Les autres pictogrammes du logiciel — ✓ ✕ ❌ ✅
+        # ⚙️ ▶️ 📊 — passent tous. Celui-la est retire partout.
+        save_window.title("Sauvegarder le planning")
         save_window.geometry("500x300")
         save_window.transient(main_app)
         save_window.grab_set()
@@ -171,7 +177,7 @@ class DatabaseManager:
             self._save_planning_with_ui(main_app, notes)
             save_window.destroy()
         
-        ctk.CTkButton(save_window, text="💾 Sauvegarder",
+        ctk.CTkButton(save_window, text="Sauvegarder",
                     font=(_police(), 14, "bold"),
                     fg_color=main_app.colors['success'],
                     hover_color=main_app.adjust_color(main_app.colors['success'], -20),

@@ -5,7 +5,7 @@ python3 tests_auto.py            # tout, y compris les ecrans
 python3 tests_auto.py --sans-ui  # la logique seule, sans ouvrir de fenetre
 ```
 
-Quarante-neuf controles.
+Cinquante controles.
 
 Ils s'executent sur un jeu **fabrique** — `jeu_synthetique.py`, et les trois
 fichiers `exemple-*.xlsx`. Le depot ne contient aucune donnee personnelle, donc

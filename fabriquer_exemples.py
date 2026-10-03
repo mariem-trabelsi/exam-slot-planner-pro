@@ -45,13 +45,23 @@ def main():
         'participe_surveillance': 'oui' if f['participe_surveillance'] else 'non',
     } for f in fiches.values()]).to_excel('exemple-enseignants.xlsx', index=False)
 
+    # La colonne « Jour » porte le NUMERO du jour d'examen, pas sa date :
+    # l'import la lit par `int()` et s'en sert comme index dans la liste des
+    # dates triees. Un exemple qui y mettait une date faisait echouer
+    # l'import — et c'est le fichier que le lecteur du README essaie en
+    # premier.
+    jours = sorted({cle.split()[0] for cle, _ in creneaux})
+    numero = {d: str(i + 1) for i, d in enumerate(jours)}
+
     voeux = []
     for e, f in fiches.items():
         for cle in f['indispo']:
             date, seance = cle.split()
+            if date not in numero:
+                continue
             voeux.append({'Enseignant': f['abrv'], 'Semestre': 'SEMESTRE 2',
                           'Session': 'Principale',
-                          'Jour': '/'.join(reversed(date.split('-'))),
+                          'Jour': numero[date],
                           'Séances': seance})
     pd.DataFrame(voeux).to_excel('exemple-souhaits.xlsx', index=False)
 

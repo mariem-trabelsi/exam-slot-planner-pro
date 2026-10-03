@@ -23,10 +23,7 @@ from collections import defaultdict
 from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
 from genetic_algorithm import run_ga_optimized, is_valid_teacher, SESSION_TIMES
-from view_methods import (
-    show_by_teacher, show_by_day_calendar, show_by_room,
-    show_prof_responsable_details, assign_teachers_to_rooms
-)
+from view_methods import assign_teachers_to_rooms
 from export_methods import ExportMethods
 from database import DatabaseManager
 
@@ -470,7 +467,7 @@ class PlanningApp(ctk.CTk):
         )
         
         self.create_modern_button(
-            sidebar, "Sauvegarder Historique", "💾", 
+            sidebar, "Sauvegarder Historique", "", 
             lambda: self.db_manager.prompt_save_current_planning(self),
             self.colors['text_secondary'], large=False
         )
@@ -719,14 +716,16 @@ class PlanningApp(ctk.CTk):
             fg_color=self.colors['success'] if view_type == 'quality' else 'transparent'
         )
 
-        # Update search field visibility
-        self.update_search_visibility()
-        
-        # Clear search fields
+        # On VIDE d'abord, on remontre ensuite. Dans l'autre ordre, le
+        # `delete` effacait le texte d'aide que `_remontrer` venait de poser,
+        # sans desarmer l'etat interne qui l'aurait repose : le champ de
+        # recherche apparaissait vide, sans rien pour dire ce qu'on y cherche.
         self.teacher_search.delete(0, 'end')
         self.day_search.delete(0, 'end')
         if hasattr(self, 'room_search'):
             self.room_search.delete(0, 'end')
+
+        self.update_search_visibility()
         
         # Display the appropriate view
         if view_type == 'planning':
@@ -1025,7 +1024,7 @@ class PlanningApp(ctk.CTk):
                 counter = 0
             
                 for index, row in df.iterrows():
-                    participe = row.get('participe_surveillance', False) in [1, '1', True, 'true', 'True']
+                    participe = _participe(row.get('participe_surveillance'))
                 
                     email = row.get('email_ens', '')
                     if not email or email in self.teachers:
@@ -1092,8 +1091,25 @@ class PlanningApp(ctk.CTk):
                     if 'wish_priority' not in self.teachers[teacher_key]:
                         self.teachers[teacher_key]['wish_priority'] = {}
                 
-                    # Gérer les jours (assumer un seul jour par ligne)
-                    jour_str = str(int(row['Jour'])) if pd.notna(row.get('Jour')) else None
+                    # La colonne « Jour » porte le NUMERO du jour d'examen.
+                    # Une date y faisait tomber tout l'import sur un
+                    # `invalid literal for int()` qui ne disait pas quelle
+                    # colonne, ni quelle ligne, ni ce qui etait attendu.
+                    brut = row.get('Jour')
+                    if pd.isna(brut):
+                        jour_str = None
+                    else:
+                        try:
+                            jour_str = str(int(brut))
+                        except (TypeError, ValueError):
+                            self.show_error_message(
+                                "Fichier inattendu",
+                                "Ligne %d : la colonne « Jour » attend le numero "
+                                "du jour d'examen (1, 2, 3...), et contient « %s ».\n\n"
+                                "Les dates sont prises dans le fichier des creneaux ; "
+                                "le fichier des voeux n'y renvoie que par leur rang."
+                                % (idx + 2, brut))
+                            return
                 
                     # Gérer les séances (peut être multiples, séparées par virgule)
                     seance_str = str(row.get('Séances', '')).strip()
@@ -1171,7 +1187,7 @@ class PlanningApp(ctk.CTk):
         button_frame = ctk.CTkFrame(self.quota_window, fg_color='transparent')
         button_frame.pack(fill='x', padx=20, pady=(0, 20))
         
-        ctk.CTkButton(button_frame, text="💾 Sauvegarder",
+        ctk.CTkButton(button_frame, text="Sauvegarder",
                      font=(_police(), 13, "bold"),
                      fg_color=self.colors['success'],
                      hover_color=self.adjust_color(self.colors['success'], -20),
@@ -2571,23 +2587,11 @@ class PlanningApp(ctk.CTk):
         from export_methods import ExportMethods
         ExportMethods.export_general_pdf(self)
 
-    def show_by_teacher_wrapper(self):
-        try:
-            show_by_teacher(self)
-        except Exception as e:
-            messagebox.showerror("Erreur", f"Erreur affichage:\n{str(e)}")
-
-    def show_by_day_calendar_wrapper(self):
-        try:
-            show_by_day_calendar(self)
-        except Exception as e:
-            messagebox.showerror("Erreur", f"Erreur affichage:\n{str(e)}")
-
-    def show_by_room_wrapper(self):
-        try:
-            show_by_room(self)
-        except Exception as e:
-            messagebox.showerror("Erreur", f"Erreur affichage:\n{str(e)}")
+    # Trois `*_wrapper` de plus vivaient ici — par enseignant, par salle, par
+    # jour — et deleguaient a `view_methods`. Rien ne les appelait : les vues
+    # passent par `switch_view`, qui appelle les methodes de cette classe. Et
+    # appelees, elles levaient toutes les trois. Retirees avec le code qu'elles
+    # couvraient.
 
     def show_planning_quality_wrapper(self):
         """L'onglet Qualite montre le rapport de conformite.
@@ -2601,12 +2605,6 @@ class PlanningApp(ctk.CTk):
             self.afficher_conformite()
         except Exception as e:
             self.show_error_message("Affichage impossible", str(e))
-
-    def show_prof_responsable_wrapper(self):
-        try:
-            show_prof_responsable_details(self)
-        except Exception as e:
-            messagebox.showerror("Erreur", f"Erreur affichage:\n{str(e)}")
 
     def preparer_fenetre(self, fenetre, largeur=None, hauteur=None):
         """Prepare une fenetre secondaire : cachee le temps d'etre batie.
@@ -2706,6 +2704,27 @@ class PlanningApp(ctk.CTk):
         """Destructeur pour fermer la connexion à la base de données"""
         if hasattr(self, 'db_manager'):
             self.db_manager.close_connection()
+
+OUI = {'1', 'oui', 'o', 'yes', 'y', 'true', 'vrai', 'x'}
+
+
+def _participe(valeur):
+    """La colonne « participe_surveillance » dit-elle oui ?
+
+    Elle n'etait reconnue que sous la forme 1 / '1' / True : un fichier qui
+    ecrivait « oui » — la forme la plus naturelle en francais — faisait sortir
+    TOUS les enseignants de la surveillance. Le planning se generait alors sans
+    personne, 0 surveillant sur chaque creneau, et aucune erreur nulle part.
+    C'est ce qui est arrive au fichier d'exemple livre avec l'outil.
+    """
+    if valeur is None:
+        return False
+    if isinstance(valeur, bool):
+        return valeur
+    if isinstance(valeur, (int, float)):
+        return not pd.isna(valeur) and int(valeur) == 1
+    return str(valeur).strip().lower() in OUI
+
 
 VERROU_IMPOSSIBLE = object()   # sentinelle : on n'a pas pu verrouiller, on passe
 

@@ -12,6 +12,7 @@ planning pour chaque enseignant. Aucun n'aurait survecu a une suite de tests.
 Usage :  python3 tests_auto.py           (tout)
          python3 tests_auto.py --sans-ui (sans ouvrir de fenetre)
 """
+import io
 import json
 import os
 import shutil
@@ -292,6 +293,29 @@ def t_verification_detecte():
         r4 = [x for x in v2 if x['id'] == 'R-04'][0]
         vrai(not r4['tenue'], "l'infraction fabriquee est detectee")
         vrai(r4['exemples'], "elle est nommee dans le rapport")
+
+
+@verifie("interface : le glyphe qui fait tomber Tk n'est nulle part")
+def t_glyphe_fatal():
+    """U+1F4BE ne doit reapparaitre dans aucun libelle.
+
+    Mesure dans l'application reelle : un bouton portant ce caractere, cree
+    apres l'ouverture de la fenetre et avec une police explicite, fait tomber
+    l'interpreteur en erreur de segmentation — 3 fois sur 3. Sans lui, 3
+    reussites sur 3 ; avec la police par defaut, 3 reussites sur 3. Les autres
+    pictogrammes du logiciel passent tous.
+
+    C'etait le bouton « Sauvegarder Historique » : en production, un clic
+    faisait disparaitre l'application. Un controle de source vaut mieux qu'un
+    test d'interface ici, puisque le defaut TUE le processus au lieu de lever.
+    """
+    import glob
+    fautifs = []
+    for f in sorted(glob.glob('*.py')):
+        for n, ligne in enumerate(io.open(f, encoding='utf-8'), 1):
+            if '\U0001F4BE' in ligne and not ligne.lstrip().startswith('#'):
+                fautifs.append('%s:%d' % (f, n))
+    egal(fautifs, [], "U+1F4BE est revenu dans le code")
 
 
 @verifie("conformite : un planning violant une regle dure est refuse")

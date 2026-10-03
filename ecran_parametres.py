@@ -18,6 +18,7 @@ from traductions import t as _t
 
 import parametres as P
 import regles as R
+from constants import COLORS as C
 
 NATURES = {R.DURE: "Obligatoire", R.SOUPLE: "Souhaitable", R.IGNOREE: "Ignoree"}
 EXPLICATION = {
@@ -32,6 +33,10 @@ class FenetreParametres(ctk.CTkToplevel):
         super().__init__(parent)
         self.title("Parametres")
         self.geometry("860x660")
+        # Sans couleur explicite, customtkinter peint cette fenetre en gris
+        # par defaut : l'ecran d'administration ne ressemblait pas au reste de
+        # l'application, alors qu'il en fait partie.
+        self.configure(fg_color=C['bg'])
         self.au_retour = au_retour
         self.conf = P.charger()
         self.regles = R.charger()
@@ -44,7 +49,15 @@ class FenetreParametres(ctk.CTkToplevel):
 
     # ---------------------------------------------------------------- bati
     def _construire(self):
-        onglets = ctk.CTkTabview(self, width=820, height=560)
+        onglets = self.onglets = ctk.CTkTabview(
+            self, width=820, height=560,
+            fg_color=C['card'], corner_radius=12,
+            segmented_button_fg_color=C['bg'],
+            segmented_button_selected_color=C['primary'],
+            segmented_button_selected_hover_color=C['primary_hover'],
+            segmented_button_unselected_color=C['bg'],
+            segmented_button_unselected_hover_color=C['hover'],
+            text_color=C['text'])
         onglets.pack(fill='both', expand=True, padx=16, pady=(16, 8))
         self._etablissement(onglets.add(_t("Etablissement")))
         self._seances(onglets.add(_t("Seances")))
@@ -55,11 +68,13 @@ class FenetreParametres(ctk.CTkToplevel):
 
         pied = ctk.CTkFrame(self, fg_color='transparent')
         pied.pack(fill='x', padx=16, pady=(0, 14))
-        self.message = ctk.CTkLabel(pied, text="", text_color='#B91C1C', anchor='w')
+        self.message = ctk.CTkLabel(pied, text="", text_color=C['error'], anchor='w')
         self.message.pack(side='left')
-        ctk.CTkButton(pied, text=_t("Annuler"), width=110, fg_color='#6B7280',
+        ctk.CTkButton(pied, text=_t("Annuler"), width=110, fg_color=C['text_secondary'],
+                      hover_color=C['text'],
                       command=self.destroy).pack(side='right', padx=(8, 0))
-        ctk.CTkButton(pied, text=_t("Enregistrer"), width=140,
+        ctk.CTkButton(pied, text=_t("Enregistrer"), width=140, fg_color=C['primary'],
+                      hover_color=C['primary_hover'],
                       command=self._enregistrer).pack(side='right')
 
     # -------------------------------------------------------- etablissement
@@ -71,7 +86,7 @@ class FenetreParametres(ctk.CTkToplevel):
         self.champ_nom.pack(anchor='w', padx=20)
         self.champ_nom.insert(0, self.conf['etablissement'])
         ctk.CTkLabel(onglet, text=_t("Il apparait en tete de l'application et sur les exports."),
-                     text_color='#6B7280').pack(anchor='w', padx=20, pady=(4, 20))
+                     text_color=C['text_secondary']).pack(anchor='w', padx=20, pady=(4, 20))
 
         ctk.CTkLabel(onglet, text=_t("Logo"), font=("DejaVu Sans", 13, "bold")).pack(
             anchor='w', padx=20, pady=(0, 6))
@@ -82,10 +97,11 @@ class FenetreParametres(ctk.CTkToplevel):
         colonne = ctk.CTkFrame(rang, fg_color='transparent')
         colonne.pack(side='left', padx=16)
         ctk.CTkButton(colonne, text=_t("Choisir une image..."), width=190,
+                      fg_color=C['primary'], hover_color=C['primary_hover'],
                       command=self._choisir_logo).pack(anchor='w')
         ctk.CTkButton(colonne, text=_t("Revenir au logo par defaut"), width=190,
-                      fg_color='#6B7280', command=self._logo_defaut).pack(anchor='w', pady=(8, 0))
-        self.etiquette_logo = ctk.CTkLabel(onglet, text="", text_color='#6B7280')
+                      fg_color=C['text_secondary'], command=self._logo_defaut).pack(anchor='w', pady=(8, 0))
+        self.etiquette_logo = ctk.CTkLabel(onglet, text="", text_color=C['text_secondary'])
         self.etiquette_logo.pack(anchor='w', padx=20, pady=(10, 0))
         self._rafraichir_logo()
 
@@ -131,17 +147,18 @@ class FenetreParametres(ctk.CTkToplevel):
         ctk.CTkLabel(onglet, text=_t("Horaires des seances"),
                      font=("DejaVu Sans", 13, "bold")).pack(anchor='w', padx=20, pady=(18, 2))
         ctk.CTkLabel(onglet, text=_t("Le code est celui qui figure dans vos fichiers de creneaux."),
-                     text_color='#6B7280').pack(anchor='w', padx=20, pady=(0, 10))
-        self.boite_seances = ctk.CTkScrollableFrame(onglet, height=300)
+                     text_color=C['text_secondary']).pack(anchor='w', padx=20, pady=(0, 10))
+        self.boite_seances = ctk.CTkScrollableFrame(onglet, height=300, fg_color=C['bg'])
         self.boite_seances.pack(fill='both', expand=True, padx=20)
         entete = ctk.CTkFrame(self.boite_seances, fg_color='transparent')
         entete.pack(fill='x', pady=(0, 4))
         for titre, l in (("Code", 90), ("Debut", 110), ("Fin", 110)):
             ctk.CTkLabel(entete, text=titre, width=l, anchor='w',
-                         text_color='#6B7280').pack(side='left', padx=4)
+                         text_color=C['text_secondary']).pack(side='left', padx=4)
         for s in self.conf['seances']:
             self._ligne_seance(s)
         ctk.CTkButton(onglet, text=_t("Ajouter une seance"), width=190,
+                      fg_color=C['primary'], hover_color=C['primary_hover'],
                       command=lambda: self._ligne_seance(
                           {'code': '', 'debut': '08:00', 'fin': '09:30'})
                       ).pack(anchor='w', padx=20, pady=12)
@@ -155,7 +172,7 @@ class FenetreParametres(ctk.CTkToplevel):
         for w in (code, debut, fin):
             w.pack(side='left', padx=4)
         entree = {'code': code, 'debut': debut, 'fin': fin, 'rang': rang}
-        ctk.CTkButton(rang, text=_t("Retirer"), width=80, fg_color='#9CA3AF',
+        ctk.CTkButton(rang, text=_t("Retirer"), width=80, fg_color=C['text_secondary_light'],
                       command=lambda: self._retirer_seance(entree)).pack(side='left', padx=8)
         self.lignes_seances.append(entree)
 
@@ -171,15 +188,15 @@ class FenetreParametres(ctk.CTkToplevel):
         ctk.CTkLabel(onglet,
                      text="Le nombre maximum de surveillances d'un enseignant, selon son grade.\n"
                           "Le code du grade est celui qui figure dans votre fichier enseignants.",
-                     text_color='#6B7280', justify='left').pack(anchor='w', padx=20, pady=(0, 10))
+                     text_color=C['text_secondary'], justify='left').pack(anchor='w', padx=20, pady=(0, 10))
 
-        self.boite_quotas = ctk.CTkScrollableFrame(onglet, height=300)
+        self.boite_quotas = ctk.CTkScrollableFrame(onglet, height=300, fg_color=C['bg'])
         self.boite_quotas.pack(fill='both', expand=True, padx=20)
         entete = ctk.CTkFrame(self.boite_quotas, fg_color='transparent')
         entete.pack(fill='x', pady=(0, 4))
         for titre, l in (("Grade", 110), ("Surveillances", 110)):
             ctk.CTkLabel(entete, text=titre, width=l, anchor='w',
-                         text_color='#6B7280').pack(side='left', padx=4)
+                         text_color=C['text_secondary']).pack(side='left', padx=4)
 
         self.lignes_quotas = []
         valeurs = dict(GRADE_QUOTAS)
@@ -187,6 +204,7 @@ class FenetreParametres(ctk.CTkToplevel):
         for grade in sorted(valeurs):
             self._ligne_quota(grade, valeurs[grade])
         ctk.CTkButton(onglet, text=_t("Ajouter un grade"), width=190,
+                      fg_color=C['primary'], hover_color=C['primary_hover'],
                       command=lambda: self._ligne_quota('', 4)).pack(
                           anchor='w', padx=20, pady=12)
 
@@ -199,9 +217,9 @@ class FenetreParametres(ctk.CTkToplevel):
         nombre.insert(0, str(valeur))
         code.pack(side='left', padx=4)
         nombre.pack(side='left', padx=4)
-        ctk.CTkLabel(rang, text=_t("surveillances"), text_color='#6B7280').pack(side='left', padx=6)
+        ctk.CTkLabel(rang, text=_t("surveillances"), text_color=C['text_secondary']).pack(side='left', padx=6)
         entree = {'code': code, 'nombre': nombre, 'rang': rang}
-        ctk.CTkButton(rang, text=_t("Retirer"), width=80, fg_color='#9CA3AF',
+        ctk.CTkButton(rang, text=_t("Retirer"), width=80, fg_color=C['text_secondary_light'],
                       command=lambda: self._retirer_quota(entree)).pack(side='left', padx=8)
         self.lignes_quotas.append(entree)
 
@@ -215,22 +233,23 @@ class FenetreParametres(ctk.CTkToplevel):
         ctk.CTkLabel(onglet, text=_t("Duree de la recherche"),
                      font=("DejaVu Sans", 13, "bold")).pack(anchor='w', padx=20, pady=(18, 2))
         ctk.CTkLabel(onglet, text=_t("Une recherche plus longue explore davantage de plannings."),
-                     text_color='#6B7280').pack(anchor='w', padx=20, pady=(0, 14))
+                     text_color=C['text_secondary']).pack(anchor='w', padx=20, pady=(0, 14))
         self.choix_generation = tk.StringVar(
             value=self.conf.get('generation', G.PROFIL_DEFAUT))
         for cle in ('rapide', 'approfondie'):
             prof = G.PROFILS[cle]
-            carte = ctk.CTkFrame(onglet)
+            carte = ctk.CTkFrame(onglet, fg_color=C['card'], corner_radius=10)
             carte.pack(fill='x', padx=20, pady=6)
             ctk.CTkRadioButton(carte, text=prof['nom'], value=cle,
                                variable=self.choix_generation,
+                               fg_color=C['primary'], hover_color=C['primary_hover'],
                                font=("DejaVu Sans", 13, "bold")).pack(
                                    anchor='w', padx=14, pady=(12, 2))
-            ctk.CTkLabel(carte, text=prof['detail'], text_color='#6B7280',
+            ctk.CTkLabel(carte, text=prof['detail'], text_color=C['text_secondary'],
                          anchor='w').pack(fill='x', padx=38, pady=(0, 6))
             ctk.CTkLabel(carte, text="%d plannings explores en parallele, %d tours"
                                      % (prof['pop_size'], prof['max_generations']),
-                         text_color='#9CA3AF', anchor='w').pack(fill='x', padx=38, pady=(0, 12))
+                         text_color=C['text_secondary_light'], anchor='w').pack(fill='x', padx=38, pady=(0, 12))
 
     # --------------------------------------------------------------- regles
     def _regles(self, onglet):
@@ -242,8 +261,8 @@ class FenetreParametres(ctk.CTkToplevel):
                           "Ignoree : elle sort de tous les calculs.\n"
                           "L'intitule et la description se modifient ; ce que la regle "
                           "verifie, lui, ne change pas.",
-                     text_color='#6B7280').pack(anchor='w', padx=20, pady=(0, 10))
-        boite = ctk.CTkScrollableFrame(onglet, height=380)
+                     text_color=C['text_secondary']).pack(anchor='w', padx=20, pady=(0, 10))
+        boite = ctk.CTkScrollableFrame(onglet, height=380, fg_color=C['bg'])
         boite.pack(fill='both', expand=True, padx=20, pady=(0, 14))
         for regle in R.CATALOGUE:
             self._ligne_regle(boite, regle)
@@ -257,20 +276,25 @@ class FenetreParametres(ctk.CTkToplevel):
         regles qui reposent sur un nombre l'exposent desormais dans une case.
         """
         rid = regle['id']
-        carte = ctk.CTkFrame(parent)
+        carte = ctk.CTkFrame(parent, fg_color=C['card'], corner_radius=10)
         carte.pack(fill='x', pady=4)
 
         haut = ctk.CTkFrame(carte, fg_color='transparent')
         haut.pack(fill='x', padx=12, pady=(10, 2))
         ctk.CTkLabel(haut, text=rid, font=("DejaVu Sans", 11, "bold"),
-                     text_color='#9CA3AF', width=48, anchor='w').pack(side='left')
+                     text_color=C['text_secondary_light'], width=48, anchor='w').pack(side='left')
         nom = ctk.CTkEntry(haut, width=320, font=("DejaVu Sans", 12, "bold"))
         # En anglais, l'intitule LIVRE s'affiche traduit ; un intitule que
         # l'etablissement a ecrit lui-meme passe tel quel, il n'a pas d'entree.
         nom.insert(0, _t(R.intitule(self.regles, rid)))
         nom.pack(side='left')
         menu = ctk.CTkOptionMenu(haut, values=[NATURES[n] for n in regle['natures']],
-                                 width=150)
+                                 width=150, fg_color=C['primary'],
+                                 button_color=C['primary_hover'],
+                                 button_hover_color=C['primary_hover'],
+                                 dropdown_fg_color=C['card'],
+                                 dropdown_text_color=C['text'],
+                                 dropdown_hover_color=C['hover'])
         menu.set(NATURES[self.regles[rid]['nature']])
         menu.pack(side='right')
 
@@ -322,7 +346,11 @@ class FenetreParametres(ctk.CTkToplevel):
         ctk.CTkLabel(onglet, text=_t("Langue de l'interface"),
                      font=("DejaVu Sans", 13, "bold")).pack(anchor='w', padx=20, pady=(18, 6))
         self.choix_langue = ctk.CTkOptionMenu(
-            onglet, values=list(P.LANGUES.values()), width=220)
+            onglet, values=list(P.LANGUES.values()), width=220,
+            fg_color=C['primary'], button_color=C['primary_hover'],
+            button_hover_color=C['primary_hover'],
+            dropdown_fg_color=C['card'], dropdown_text_color=C['text'],
+            dropdown_hover_color=C['hover'])
         self.choix_langue.set(P.LANGUES[self.conf['langue']])
         self.choix_langue.pack(anchor='w', padx=20)
 

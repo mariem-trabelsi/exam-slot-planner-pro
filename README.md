@@ -23,6 +23,12 @@ tout le monde est indisponible ne permet pas de répartir également la charge �
 **l'outil le dit** et refuse de présenter le planning comme conforme. Il ne fait
 jamais semblant.
 
+C'est le cas de l'égalité stricte des charges à grade égal : elle demande que le
+total de chaque grade se divise par son effectif, ce que les indisponibilités et
+les effectifs par salle ne permettent pas toujours. Sur le jeu d'exemple, le
+mode rapide y parvient environ une fois sur deux, le mode approfondi plus
+souvent. Quand il n'y parvient pas, le rapport nomme le grade concerné.
+
 ## Les douze règles
 
 | | |
@@ -96,7 +102,7 @@ python3 fabriquer_exemples.py        # pour en refabriquer d'autres
 ## Tests
 
 ```
-python3 tests_auto.py            # 49 contrôles
+python3 tests_auto.py            # 50 contrôles
 python3 tests_auto.py --sans-ui  # la logique seule, sans ouvrir de fenêtre
 ```
 

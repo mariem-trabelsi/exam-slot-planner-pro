@@ -886,6 +886,21 @@ def run_ga_optimized(slots, teachers, progress_callback=None, profil=None):
                     "La recherche a echoue %d fois de suite (%s). "
                     "Le planning serait inexploitable." % (echecs, e))
             continue
+    # Le meilleur SCORE n'est pas forcement un planning conforme. La reparation
+    # fait tenir les regles obligatoires quand elle le peut, et l'egalite
+    # stricte des charges a grade egal ne lui est pas toujours accessible : sur
+    # le jeu d'exemple, elle y arrivait une fois sur deux. Or une regle
+    # declaree obligatoire passe AVANT le score — c'est tout le contrat.
+    # On rend donc le meilleur planning CONFORME de la population finale, et le
+    # mieux note seulement si aucun ne l'est. Dans ce cas la verification le
+    # declarera non tenue, ce qui reste la bonne reponse : tenue, ou declaree
+    # non tenue, jamais violee en silence.
+    for candidat, _note in pop_with_fitness[:20]:
+        try:
+            if planning_conforme(verifier_planning(candidat, teachers, slots_dict)):
+                return candidat, best_fitness_history, "max_gen"
+        except Exception:
+            break
     return pop_with_fitness[0][0], best_fitness_history, "max_gen"
 
 def verifier_planning(assignment, teachers, slots_dict, conf=None):
