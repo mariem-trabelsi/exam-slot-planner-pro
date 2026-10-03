@@ -1,0 +1,29 @@
+# Environnements virtuels
+.venv/
+venv/
+env_surveillance/
+myenv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Sorties de PyInstaller
+/build/
+/dist/
+
+# Exports produits par l'application
+/exports/
+
+# Configuration locale de l'etablissement
+parametres.json
+regles.json
+
+# DONNEES DE TRAVAIL : noms, adresses, souhaits d'absence.
+# Elles ne doivent jamais entrer dans un depot.
+*.xlsx
+*.xls
+*.db
+*.sqlite
+!exemple-*.xlsx

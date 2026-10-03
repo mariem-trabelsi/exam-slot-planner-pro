@@ -1,0 +1,65 @@
+# Fabrique l'executable Windows et le joint a une Release.
+#
+# Pourquoi chez GitHub et pas sur le poste : PyInstaller ne fabrique que pour
+# le systeme sur lequel il tourne. Un .exe Windows exige donc une machine
+# Windows, et GitHub en prete une.
+#
+# Pour publier une version :
+#   git tag v1.0.0 && git push origin v1.0.0
+name: Executable Windows
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:        # bouton « Run workflow » dans l'onglet Actions
+
+permissions:
+  contents: write           # necessaire pour creer la Release
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Dependances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller==6.11.1
+
+      - name: Les tests qui n'ouvrent aucune fenetre
+        run: python tests_auto.py --sans-ui
+
+      - name: Construction
+        run: >
+          pyinstaller --noconfirm --onefile --windowed
+          --name ExamSlotPlanner
+          --add-data "assets;assets"
+          --collect-all customtkinter
+          main.py
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/ExamSlotPlanner.exe
+          body: |
+            Executable Windows. Aucune installation de Python requise.
+
+            Telecharger `ExamSlotPlanner.exe`, puis double-cliquer. Au premier
+            lancement, Windows peut demander une confirmation : l'executable
+            n'est pas signe.
+
+            La configuration et la base de travail sont ecrites dans
+            `%APPDATA%\ExamSlotPlanner`.
+
+      - name: Executable en piece jointe du build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExamSlotPlanner-windows
+          path: dist/ExamSlotPlanner.exe

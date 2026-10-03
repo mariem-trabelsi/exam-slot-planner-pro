@@ -1,0 +1,13 @@
+customtkinter==5.2.2
+darkdetect==0.8.0
+packaging==25.0
+pandas==2.3.3
+numpy==2.3.4
+python-dateutil==2.9.0.post0
+pytz==2025.2
+tzdata==2025.2
+reportlab==4.4.4
+pillow>=10.0.0        # inclut PIL.ImageTk, absent du paquet systeme
+charset-normalizer==3.4.4
+openpyxl==3.1.5
+et-xmlfile==2.0.0
